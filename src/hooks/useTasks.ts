@@ -89,54 +89,82 @@ export function useTasks(): UseTasksState {
     const revenuePerHour = computeRevenuePerHour(tasks);
     const averageROI = computeAverageROI(tasks);
     const performanceGrade = computePerformanceGrade(averageROI);
-    return { totalRevenue, totalTimeTaken, timeEfficiencyPct, revenuePerHour, averageROI, performanceGrade };
+    return {
+      totalRevenue,
+      totalTimeTaken,
+      timeEfficiencyPct,
+      revenuePerHour,
+      averageROI,
+      performanceGrade,
+    };
   }, [tasks]);
 
-  const addTask = useCallback((task) => {
-    setTasks(prev => [
-      ...prev,
-      {
-        ...task,
-        id: task.id ?? crypto.randomUUID(),
-        revenue: Number(task.revenue) || 0,
-        timeTaken: task.timeTaken > 0 ? task.timeTaken : 1,
-        createdAt: new Date().toISOString(),
-        completedAt: task.status === 'Done' ? new Date().toISOString() : undefined,
-      },
-    ]);
-  }, []);
+  const addTask = useCallback(
+    (task: Omit<Task, 'id'> & { id?: string }) => {
+      setTasks((prev) => [
+        ...prev,
+        {
+          ...task,
+          id: task.id ?? crypto.randomUUID(),
+          revenue: Number(task.revenue) || 0,
+          timeTaken: task.timeTaken > 0 ? task.timeTaken : 1,
+          createdAt: new Date().toISOString(),
+          completedAt:
+            task.status === 'Done' ? new Date().toISOString() : undefined,
+        },
+      ]);
+    },
+    []
+  );
 
-  const updateTask = useCallback((id, patch) => {
-    setTasks(prev =>
-      prev.map(t =>
-        t.id === id
-          ? {
-              ...t,
-              ...patch,
-              timeTaken: patch.timeTaken && patch.timeTaken > 0 ? patch.timeTaken : t.timeTaken,
-              completedAt:
-                t.status !== 'Done' && patch.status === 'Done'
-                  ? new Date().toISOString()
-                  : t.completedAt,
-            }
-          : t
-      )
-    );
-  }, []);
+  const updateTask = useCallback(
+    (id: string, patch: Partial<Task>) => {
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === id
+            ? {
+                ...t,
+                ...patch,
+                timeTaken:
+                  patch.timeTaken && patch.timeTaken > 0
+                    ? patch.timeTaken
+                    : t.timeTaken,
+                completedAt:
+                  t.status !== 'Done' && patch.status === 'Done'
+                    ? new Date().toISOString()
+                    : t.completedAt,
+              }
+            : t
+        )
+      );
+    },
+    []
+  );
 
   const deleteTask = useCallback((id: string) => {
-    setTasks(prev => {
-      const target = prev.find(t => t.id === id) || null;
+    setTasks((prev) => {
+      const target = prev.find((t) => t.id === id) || null;
       setLastDeleted(target);
-      return prev.filter(t => t.id !== id);
+      return prev.filter((t) => t.id !== id);
     });
   }, []);
 
   const undoDelete = useCallback(() => {
     if (!lastDeleted) return;
-    setTasks(prev => [...prev, lastDeleted]);
+    setTasks((prev) => [...prev, lastDeleted]);
     setLastDeleted(null);
   }, [lastDeleted]);
 
-  return { tasks, loading, error, derivedSorted, metrics, lastDeleted, addTask, updateTask, deleteTask, undoDelete };
+  return {
+    tasks,
+    loading,
+    error,
+    derivedSorted,
+    metrics,
+    lastDeleted,
+    addTask,
+    updateTask,
+    deleteTask,
+    undoDelete,
+  };
 }
